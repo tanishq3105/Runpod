@@ -13,8 +13,42 @@ RUN . /clone.sh clip-interrogator https://github.com/pharmapsychotic/clip-interr
 RUN . /clone.sh generative-models https://github.com/Stability-AI/generative-models 45c443b316737a4ab6e40413d7794a7f5657c19f
 RUN . /clone.sh stable-diffusion-webui-assets https://github.com/AUTOMATIC1111/stable-diffusion-webui-assets 6f7db241d2f8ba7457bac5ca9753331f0c266917
 
-RUN apk add --no-cache wget && \
-    wget -O /model.safetensors https://civitai.com/api/download/models/501240
+#add the model stored locally
+ADD model.safetensors /
+
+# Add all files from the controlnet folder to the root directory in the current stage
+ADD controlnet/control_v11e_sd15_ip2p.pth /
+ADD controlnet/control_v11e_sd15_ip2p.yaml /
+ADD controlnet/control_v11e_sd15_shuffle.pth /
+ADD controlnet/control_v11e_sd15_shuffle.yaml /
+ADD controlnet/control_v11f1e_sd15_tile.pth /
+ADD controlnet/control_v11f1e_sd15_tile.yaml /
+ADD controlnet/control_v11f1p_sd15_depth.pth /
+ADD controlnet/control_v11f1p_sd15_depth.yaml /
+ADD controlnet/control_v11p_sd15_canny.pth /
+ADD controlnet/control_v11p_sd15_canny.yaml /
+ADD controlnet/control_v11p_sd15_inpaint.pth /
+ADD controlnet/control_v11p_sd15_inpaint.yaml /
+ADD controlnet/control_v11p_sd15_lineart.pth /
+ADD controlnet/control_v11p_sd15_lineart.yaml /
+ADD controlnet/control_v11p_sd15_mlsd.pth /
+ADD controlnet/control_v11p_sd15_mlsd.yaml /
+ADD controlnet/control_v11p_sd15_normalbae.pth /
+ADD controlnet/control_v11p_sd15_normalbae.yaml /
+ADD controlnet/control_v11p_sd15_openpose.pth /
+ADD controlnet/control_v11p_sd15_openpose.yaml /
+ADD controlnet/control_v11p_sd15_scribble.pth /
+ADD controlnet/control_v11p_sd15_scribble.yaml /
+ADD controlnet/control_v11p_sd15_seg.pth /
+ADD controlnet/control_v11p_sd15_seg.yaml /
+ADD controlnet/control_v11p_sd15_softedge.pth /
+ADD controlnet/control_v11p_sd15_softedge.yaml /
+ADD controlnet/control_v11p_sd15s2_lineart_anime.pth /
+ADD controlnet/control_v11p_sd15s2_lineart_anime.yaml /
+ADD sam_vit_b_01ec64.pth /
+ADD sam_vit_h_4b8939.pth /
+
+ADD groundingdino_swint_ogc.pth /
 
 FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
 
@@ -37,14 +71,54 @@ RUN --mount=type=cache,target=/root/.cache/pip \
   git reset --hard v1.9.4 && \
   pip install -r requirements_versions.txt
 
-
+RUN cd stable-diffusion-webui/extensions && \
+  git clone https://github.com/Mikubill/sd-webui-controlnet.git && \
+  git clone https://github.com/Bing-su/adetailer && \
+  git clone https://github.com/continue-revolution/sd-webui-segment-anything && \
+  git clone https://github.com/huchenlei/sd-webui-openpose-editor.git
 
 ENV ROOT=/stable-diffusion-webui
 
 COPY --from=download /model.safetensors ${ROOT}/models/Stable-diffusion/
+
+COPY --from=download /control_v11e_sd15_ip2p.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11e_sd15_ip2p.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11e_sd15_shuffle.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11e_sd15_shuffle.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11f1e_sd15_tile.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11f1e_sd15_tile.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11f1p_sd15_depth.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11f1p_sd15_depth.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_canny.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_canny.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_inpaint.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_inpaint.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_lineart.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_lineart.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_mlsd.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_mlsd.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_normalbae.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_normalbae.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_openpose.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_openpose.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_scribble.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_scribble.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_seg.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_seg.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_softedge.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15_softedge.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15s2_lineart_anime.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+COPY --from=download /control_v11p_sd15s2_lineart_anime.yaml ${ROOT}/extensions/sd-webui-controlnet/models/
+
+COPY --from=download /sam_vit_b_01ec64.pth ${ROOT}/extensions/sd-webui-segment-anything/models/sam/
+COPY --from=download /sam_vit_h_4b8939.pth ${ROOT}/extensions/sd-webui-segment-anything/models/sam/
+
+COPY --from=download /groundingdino_swint_ogc.pth ${ROOT}/extensions/sd-webui-segment-anything/models/grounding-dino/
+
 COPY --from=download /repositories/ ${ROOT}/repositories/
 RUN mkdir ${ROOT}/interrogate && cp ${ROOT}/repositories/clip-interrogator/clip_interrogator/data/* ${ROOT}/interrogate
 
+COPY requirements.txt ./
 
 RUN --mount=type=cache,target=/root/.cache/pip \
   pip install pyngrok xformers==0.0.26.post1 \
@@ -60,6 +134,11 @@ ENV LD_PRELOAD=libtcmalloc.so
 RUN --mount=type=cache,target=/root/.cache/pip \
    pip uninstall -y typing_extensions && \
    pip install typing_extensions==4.11.0
+
+RUN pip install -r requirements.txt
+
+COPY controlnet/ip-adapter-plus_sd15.pth ${ROOT}/extensions/sd-webui-controlnet/models/
+
 
 COPY . /docker
 
